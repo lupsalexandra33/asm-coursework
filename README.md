@@ -1,5 +1,3 @@
-Lupsa Alexandra-Cristina 312CC
-
 TEMA 3 PCLP2 : Cosminel cel Pasionat
 
 Mod de implementare al task-urilor:

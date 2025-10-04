@@ -1,9 +1,10 @@
-TEMA 3 PCLP2 : Cosminel cel Pasionat
+## TEMA 3 PCLP2 : Cosminel cel Pasionat
 
-Mod de implementare al task-urilor:
+### Mod de implementare al task-urilor:
 
-1. Task 1:
-	Am pus numarul de noduri n in ebx si in ecx pointer la inceput de array. Cum
+1. <ins> Task 1: </ins>
+   
+Am pus numarul de noduri n in ebx si in ecx pointer la inceput de array. Cum
 la finalul functiei trebuie sa returnam in eax pointer catre inceputul listei,
 adica catre head, vom considera de la inceput ca in eax vom retine head-ul. In
 implementare vom avea nevoie de doua for-uri, unul pentru a parcurge toate
@@ -21,14 +22,18 @@ de al doilea for, daca v[edx] != i, inseamna ca nu am gasit elementul si
 incrementam edx. La finalul for-urilor, intram in eticheta end_loop si iesim din
 functie, intrucat rezultatul functiei se afla deja in eax.
 
-2. Task 2:
-	In cadrul acestui task am avut de implementat doua functii: sort si
+3. <ins> Task 2: </ins>
+
+In cadrul acestui task am avut de implementat doua functii: sort si
 get_words. Am inceput cu get_words, iar apoi am facut sort. Pentru a rezolva
-sort, am mai implementat o functie, comparare_cuvinte.
-	Ca variabile, am initializat in .bss variabila i, pe care am folosit-o la
+sort, am mai implementat o functie, comparare_cuvinte.\
+
+Ca variabile, am initializat in .bss variabila i, pe care am folosit-o la
 functia get_words.
-		-> Functia get_words:
-		Am pus in ebx string-ul, in ecx vectorul de stringuri in care salvam
+
+-> Functia get_words:
+
+Am pus in ebx string-ul, in ecx vectorul de stringuri in care salvam
 cuvintele iar in edx am stocat numarul de cuvinte. Am initializat eax cu 0,
 intrucat vrem sa comparam cuvintele caracter cu caracter, incepand de la 0.
 Punem in edi inceputul string-ului iar in acesta variabila vom retine mereu
@@ -54,8 +59,10 @@ toti delimitatorii, reinitializam variabila i cu 0 pentru a calcula lungimea
 noului cuvant, incrementam esi deoarece vrem sa continuam ci urmatorul cuvant
 apoi reintram in loop_cuvinte. La finalul codului, in eticheta end_loop,
 incarcam in eax adresa primului cuvant din words[0].
-		-> Functia sort:
-		In cadrul functiei sort, am pus in ebx vectorul de cuvinte, in ecx
+
+-> Functia sort:
+
+In cadrul functiei sort, am pus in ebx vectorul de cuvinte, in ecx
 numarul de cuvinte si in edx dimensiunea unui cuvant. Apoi, pentru apelul qsort
 am adaugat pe stiva in ordine inversa paramterii necesari: vectorul, numarul de
 cuvinte, dimensiunea unui cuvant si functia auxiliara creata, comparare_cuvinte.
@@ -77,8 +84,9 @@ am ajuns la finalul cuvantului, inseamna ca cele doua cuvinte sunt egale si
 eax = 0. Dupa apelul functiei qsort in functia sort, curatam stiva, iar la final
 punem in eax pointer catre adresa de inceput a vectorului de cuvinte sortat.
 
-3. Task 3:
-	In cadrul acestei functii am avut de implementat Fibonacci recursiv, pentru
+4. <ins> Task 3: </ins>
+
+In cadrul acestei functii am avut de implementat Fibonacci recursiv, pentru
 care stim urmatoarele reguli: pentru n < k => returnam 0 in functia recursiva
 (in eax), pentru n == k => returnam 1 in eax, iar pentru n > k => adunam
 recursiv ultimii k termeni intr-un for. Astfel, am pus in ebx valoarea lui n, in
@@ -94,14 +102,17 @@ end, iar daca n < k, se intra in return_k0 unde eax = 0 si tot asa se iese din
 functie prin apelul etichetei end. La finalul for-ului, intram in eticheta
 end_loop, unde salvam in eax rezultatul functiei si iesim din functie.
 
-4. Task 4:
-	In cadrul acestui task am avut de implementat 2 functii, check_palindrome si
+5. <ins> Task 4: </ins>
+
+In cadrul acestui task am avut de implementat 2 functii, check_palindrome si
 composite_palindrome. Pentru cel de al doilea subtask, am implementat in .bss 7
 variabile pe care o sa le explic in detaliu cand explic functia. Totodata, tot
 pentru acel subtask am apelat de a lungul rezolvarii 6 functii externe: malloc,
 strcat, strcmp, strcpy, strlen si free.
-		-> Functia check_palindrome:
-		Am pus in eax sirul de caractere si in ebx lungimea sirului, apoi am dat
+
+-> Functia check_palindrome:
+
+Am pus in eax sirul de caractere si in ebx lungimea sirului, apoi am dat
 push la eax intrucat vrem sa-l folosim si in alte scopuri de a lungul functiei.
 Astfel, calculam in eax care este jumatatea lungimii sirului, iar apoi
 initializam registrul edi cu 0. Dam pop la eax intrucat vrem sa revenim la
@@ -117,8 +128,10 @@ comparatie, se modifica si esi, acesta fiind decrementat mereu cu valoarea lui
 edi. Daca ajungem sa iesim din for deoarece edi >= ecx, inseamna ca string-ul
 este palindrom si intram in eticheta e_palindrom, unde il initializam pe eax = 1
 si iesim apoi din functie.
-		-> Functia composite_palindrome:
-		Inainte de a incepe explicarea codului, voi vorbi despre variabilele
+
+-> Functia composite_palindrome:
+
+Inainte de a incepe explicarea codului, voi vorbi despre variabilele
 initializate in .bss si voi explica ce rol au ele pe parcursul codului. Pentru
 implementarea acestui subtask am folosit metoda mastilor pe biti, astfel avem
 variabilele: in rezultat punem lungimea palindromului final, in vectorul lungimi

@@ -1,227 +1,249 @@
-## TEMA 3 PCLP2 : Cosminel cel Pasionat
+# PCLP2 - Homework 3
+## Overview
 
-### Mod de implementare al task-urilor:
+This homework contains four tasks written in x86 (32-bit) assembly, using the
+cdecl calling convention: parameters are pushed onto the stack in reverse order,
+the return value is passed back in `eax`, and the caller is responsible for
+cleaning up the stack after each call.
 
-1. <ins> Task 1: </ins>
-   
-Am pus numarul de noduri n in ebx si in ecx pointer la inceput de array. Cum
-la finalul functiei trebuie sa returnam in eax pointer catre inceputul listei,
-adica catre head, vom considera de la inceput ca in eax vom retine head-ul. In
-implementare vom avea nevoie de doua for-uri, unul pentru a parcurge toate
-valorile de la 1 la n, iar altul ce contine toate elementele in care il cautam
-pe cel curent din primul for ce trebuie pus in lista. Pentru parcurgerea celor
-doua loop-uri initializam atat variabila i declarata in .bss cat si edx cu 0. In
-cel de-al doilea for, cand gasim elementul ce trebuie adaugat in lista,
-verificam daca eax == 0, adica daca nu am mai adaugat niciun element in lista,
-caz in care mergem in eticheta primul_element, unde atat head-ul (eax) cat si
-tail-ul (edi) primesc adresa elementului respectiv. In cazul in care eax are
-deja elemente, reinitializam coada (edi si edi + 4 (next-ul)). In cazul ambelor
-etichete, atat primul_element cat si adaugare_nod, la finalul adaugarii
-elementului in lista, incrementam variabila i si reinitializam edx cu 0. In cel
-de al doilea for, daca v[edx] != i, inseamna ca nu am gasit elementul si
-incrementam edx. La finalul for-urilor, intram in eticheta end_loop si iesim din
-functie, intrucat rezultatul functiei se afla deja in eax.
+Every function opens its own stack frame with `enter 0, 0` and closes it with
+`leave` / `ret`. Whenever an external function is called, the registers whose
+values must survive the call are saved on the stack beforehand and restored
+immediately afterwards.
 
-3. <ins> Task 2: </ins>
+| Task | File | Implemented functions |
+| --- | --- | --- |
+| 1 | `task-1/sortari.asm` | `sort` |
+| 2 | `task-2/operatii.asm` | `get_words`, `sort`, `comparare_cuvinte` |
+| 3 | `task-3/kfib.asm` | `kfib` |
+| 4 | `task-4/composite_palindrome.asm` | `check_palindrome`, `composite_palindrome` |
 
-In cadrul acestui task am avut de implementat doua functii: sort si
-get_words. Am inceput cu get_words, iar apoi am facut sort. Pentru a rezolva
-sort, am mai implementat o functie, comparare_cuvinte.\
+---
 
-Ca variabile, am initializat in .bss variabila i, pe care am folosit-o la
-functia get_words.
+## Task 1 - Linking the nodes into a sorted list
 
--> Functia get_words:
+```c
+struct node { int val; struct node *next; };
+struct node *sort(int n, struct node *node);
+```
 
-Am pus in ebx string-ul, in ecx vectorul de stringuri in care salvam
-cuvintele iar in edx am stocat numarul de cuvinte. Am initializat eax cu 0,
-intrucat vrem sa comparam cuvintele caracter cu caracter, incepand de la 0.
-Punem in edi inceputul string-ului iar in acesta variabila vom retine mereu
-pointer catre cuvantul curent. Facem acest lucru intrucat eax va fi
-reinitializat cu 0 pentru fiecare cuvant, edi va continua sa creasca pe tot
-parcursul verificarii string-ului. Initializam variabila i cu 0, in cadrul ei
-vom calcula lungimea cuvantului actual. Initializam si registrul esi cu 0, in
-cadrul lui vom contoriza numarul de cuvinte. Intram in eticheta loop_cuvinte, in
-care verificam daca ajungem la un delimitator, caz in care intram in eticheta
-cuvant_nou. In caz contrar, in eticheta new_char incrementam atat eax, cat si i.
-In cazul in care sirul a ajuns la terminatorul de sir, mergem in eticheta
-ultimul_cuvant, in care verificam daca variabila i este nenula, caz in care mai
-adaugam un cuvant in vector. In momentul identificarii unui delimitator, trecem
-in eticheta cuvant_nou, in care adaugam terminatorul de sir cuvantului si
-incrementam apoi eax cu 1 pentru a muta cursorul care tine evidenta pe ce
-pozitie ne aflam in string cu un caracter inainte. Salvam in vector adresa se
-inceput a cuvantului curent, iar apoi mutam pointer-ul catre finalul cuvantului,
-adaugand variabila i. Incrementam si edi pentru a fi la acelasi nivel cu eax.
-Apoi intram in eticheta verificare_delimitatori, unde vrem sa vedem cati
-delimitatori mai exista pana la inceputul urmatorului cuvant, daca mai exista
-intram in eticheta repeat, unde incrementam atat eax cat si edi. Cand trecem de
-toti delimitatorii, reinitializam variabila i cu 0 pentru a calcula lungimea
-noului cuvant, incrementam esi deoarece vrem sa continuam ci urmatorul cuvant
-apoi reintram in loop_cuvinte. La finalul codului, in eticheta end_loop,
-incarcam in eax adresa primului cuvant din words[0].
+The array already holds all the nodes; the job is to link them through their
+`next` pointers so that the resulting list is sorted in ascending order, and to
+return a pointer to the new head.
 
--> Functia sort:
+**Register layout**
 
-In cadrul functiei sort, am pus in ebx vectorul de cuvinte, in ecx
-numarul de cuvinte si in edx dimensiunea unui cuvant. Apoi, pentru apelul qsort
-am adaugat pe stiva in ordine inversa paramterii necesari: vectorul, numarul de
-cuvinte, dimensiunea unui cuvant si functia auxiliara creata, comparare_cuvinte.
-In aceasta functie, am luat de pe stiva atat adresa pointerului la primul
-cuvant, cat si la cel de al doilea. Pentru ambele obtinem adresa de inceput.
-Apoi, vom calcula pe rand lungimea celor doua string-uri, in strlen_1 si
-strlen_2. Inainte de intrarea in aceste etichete, initializam edi si esi cu 0
-intrucat in ele vom calcula lungimile. Ambele label-uri fac acelasi lucru,
-compara daca byte-ul este insusi terminatorul de sir, caz in care in cadrul lui
-strlen_1, intram in reatribuire_eax, unde facem eax 0 pentru urmatorul calcul.
-In cadrul lui strlen_2, intram in functia comparare_rezultate, in care vrem sa
-vedem care din cele doua cuvinte are lungimea mai mare: daca primul cuvant este
-mai lung, eax = 1 si iesim din functie, daca al doilea cuvant este mai lung,
-eax = -1 si iesim din functie. In cazul in care cele doua cuvinte au aceeasi
-lungime, verificam din punct de vedere lexicograifc. Reinitializam edi cu 0
-pentru a parcurge cele doua cuvinte litera cu litera. La prima litera diferita,
-ne mutam in unul din cele doua label-uri care fac eax 1 sau -1. In cazul in care
-am ajuns la finalul cuvantului, inseamna ca cele doua cuvinte sunt egale si
-eax = 0. Dupa apelul functiei qsort in functia sort, curatam stiva, iar la final
-punem in eax pointer catre adresa de inceput a vectorului de cuvinte sortat.
+- `eax` = the head of the list (this is also the return value, so it is kept
+  here from the very beginning)
+- `ebx` = `n`, the number of nodes
+- `ecx` = pointer to the start of the array
+- `edi` = the tail of the list built so far
+- `edx` = counter for the inner loop
+- `[i]` = variable declared in `.bss`, counter for the outer loop
 
-4. <ins> Task 3: </ins>
+**How it works**
 
-In cadrul acestei functii am avut de implementat Fibonacci recursiv, pentru
-care stim urmatoarele reguli: pentru n < k => returnam 0 in functia recursiva
-(in eax), pentru n == k => returnam 1 in eax, iar pentru n > k => adunam
-recursiv ultimii k termeni intr-un for. Astfel, am pus in ebx valoarea lui n, in
-edx valoarea lui k, iar apoi am initializat alte doua registre, edi cu 0, in el
-vom calcula suma, si ecx cu 1, intrucat urmeaza un for de la 1 la k. Vom calcula
-in regsitrul esi n - i, apoi dam push la ecx si edx pentru a nu le corupe
-valoarea pe parcursul executiei functiei externe. Punem pe stiva in ordine
-inversa parametrii functiei, k, respectiv n - i si apelam recursiv functia kfib.
-Dupa executie eliberam stiva si dam pop la registre. Adaugam rezultatul apelului
-in suma iar apoi trecem la urmatoarea iteratie. In cazul in care n == k, intram
-in eticheta return_k1, unde eax = 1 si se iese apoi din functie prin label-ul
-end, iar daca n < k, se intra in return_k0 unde eax = 0 si tot asa se iese din
-functie prin apelul etichetei end. La finalul for-ului, intram in eticheta
-end_loop, unde salvam in eax rezultatul functiei si iesim din functie.
+The algorithm uses two nested loops. The outer loop (`start_loop_1`) walks
+through every value from `1` to `n`, while the inner loop (`start_loop_2`) scans
+the whole array looking for the node holding the current value. Both counters are
+initialised before entering the loops: `[i]` with `1` and `edx` with `0`.
 
-5. <ins> Task 4: </ins>
+When the searched element is found, the code checks whether `eax` is still `0`:
 
-In cadrul acestui task am avut de implementat 2 functii, check_palindrome si
-composite_palindrome. Pentru cel de al doilea subtask, am implementat in .bss 7
-variabile pe care o sa le explic in detaliu cand explic functia. Totodata, tot
-pentru acel subtask am apelat de a lungul rezolvarii 6 functii externe: malloc,
-strcat, strcmp, strcpy, strlen si free.
+- **`primul_element`** = nothing has been added yet, so the node becomes both the
+  head (`eax`) and the tail (`edi`) of the list.
+- **`adaugare_nod`** = the list already has elements, so the node is appended by
+  updating `tail->next` (`[edi + 4]`) and then moving the tail forward
+  (`edi = node`).
 
--> Functia check_palindrome:
+In both cases, once the node has been linked, `[i]` is incremented and `edx` is
+reset to `0` so the next value can be searched for from the beginning of the
+array. If the current array element does not match, only `edx` is incremented and
+the search continues.
 
-Am pus in eax sirul de caractere si in ebx lungimea sirului, apoi am dat
-push la eax intrucat vrem sa-l folosim si in alte scopuri de a lungul functiei.
-Astfel, calculam in eax care este jumatatea lungimii sirului, iar apoi
-initializam registrul edi cu 0. Dam pop la eax intrucat vrem sa revenim la
-valoarea sa initiala, apoi copiem in esi lungimea sirului pe care o scadem cu 1,
-intrucat numaratoarea caractelor incepe de la 0 si practic ultimul caracter se
-va afla pe pozitia n - 1. Apoi in cadrul unui for comparam caracter cu caracter,
-pe cel din prima jumatate daca este echivalent cu cel care ii corespunde din a
-doua jumatate. Daca gasim diferente, intram in eticheta nu_e_palindrom, unde
-eax = 0 si se iese apoi din functie prin eticheta end_loop. Daca caracterele
-sunt identice, intram in eticheta repeat, unde incrementam edi pentru a trece la
-urmatorul caracter ce trebuie comparat. In noua bucla, fix inainte de
-comparatie, se modifica si esi, acesta fiind decrementat mereu cu valoarea lui
-edi. Daca ajungem sa iesim din for deoarece edi >= ecx, inseamna ca string-ul
-este palindrom si intram in eticheta e_palindrom, unde il initializam pe eax = 1
-si iesim apoi din functie.
+When `[i]` goes past `n` the sorting is finished, control falls into `end_loop`
+and the function returns — the result is already sitting in `eax`.
 
--> Functia composite_palindrome:
+## Task 2 - Splitting a text into words and sorting them
 
-Inainte de a incepe explicarea codului, voi vorbi despre variabilele
-initializate in .bss si voi explica ce rol au ele pe parcursul codului. Pentru
-implementarea acestui subtask am folosit metoda mastilor pe biti, astfel avem
-variabilele: in rezultat punem lungimea palindromului final, in vectorul lungimi
-punem lungimile fiecarui cuvant din vectorul de cuvinte, in rezultat_length
-retinem lungimea celui mai lung palindrom gasit pana acum, in p retinem numarul
-de submultimi posibile, in cazul nostru 2^15, in copie creem o copie a fiecarei
-submultimi posibile, in lungime_string retinem lungimea rezultata din adunarea
-cuvintelor prezente in submultimea curenta iar in variabila temp adaugam
-concatenarea mastii curente. In ceea ce priveste codul, am inceput prin a pune
-in ebx vectorul de cuvinte si in edx numarul de cuvinte din vector. Initializam
-atat char *rezultat = NULL, cat si int *lungimi = NULL. Apoi copiem in ecx
-numarul de cuvinte din vector, pe care il inmultim apoi cu 4 pentru a obtine
-relatia (len * sizeof(int)). Dam push la registre pentru a nu le corupe valoarea
-pe parcursul executiei functiei externe, apoi dam push la ecx si apelam functia
-malloc, care prin conventie salveaza rezultatul in eax; dam pop la registre iar
-apoi punem in variabila lungimi eax-ul, el fiind astfel vectorul in care vom
-retine lungimile cuvintelor. Initializam si rezultat_length cu 0, dar si ecx,
-intrucat vom aveam nevoie de el in urmatorul for, ce incepe la eticheta
-loop_retinere_lungimi_cuvinte. Trecand astfel prin toate cuvintele, salvam in
-eax strs[i], apoi dam push la registre pentru a nu le corupe valoarea pe
-parcursul executiei functiei externe. Dam push si la eax si apelam strlen, fiind
-functie externa eax primeste prin conventie rezultatul functiei, si anume
-lungimea lui strs[i], pe care, dupa ce eliberam stiva si dam pop la celelalte
-registre, i-o atribuie registrului edi. Ajunsi in eticheta retinere_lungime,
-punem in vectorul lungimi la pozitia ecx valoarea salvata in edi, incrementam
-ecx, iar apoi repetam procesul pana se iese din for. Odata iesiti din for,
-intram in eticheta shiftare, unde calculam 1 << edx, si salvam rezultatul in
-variabila p. Initializam ecx cu 1, intrucat vrem sa parcurgem toate mastile de
-la 1 pana la p (2^15 = 32768), fiecare masca reprezentand o submultime posibila
-de cuvinte din vectorul initial. La fiecare pas in acest for, masca curenta
-(reprezentata de valoarea lui ecx) indica ce cuvinte sunt incluse in submultimea
-respectiva — daca bitul i al mastii este 1, inseamna ca cuvantul i este prezent
-in submultime. In variabila copie facem o copie a mastii curente, iar apoi
-initializam variabila lungime_string cu 0, unde calculam suma lungimilor tuturor
-cuvintelor incluse in masca curenta. Initializam registrul edi cu 0, intrucat il
-vom folosi in urmatorul for, loop_digits, care este de la 0 la [ebp + 12] - 1.
-Pentru fiecare cuvant luam variabila copie si verificam daca este impara sau
-para, adica daca exista sau nu cuvantul in masca curenta (in ecx). Daca cuvantul
-nu este adaugat in masca intram in eticheta next_word_loop, unde punem in eax
-variabila copie, impartim variabila la 2 prin shiftare la dreapta pe biti, punem
-noua variabila a copiei in copie, iar apoi incrementam edi pentru a trece la
-urmatorul cuvant. In caz contrar, intram in suma_lungimi, care adauga in
-lungime_string valoarea de pe pozitia edi din vectorul lungimi. Ulterior, tot in
-next_word_loop se ajunge pentru a se repeta procesul pentru a verifica toate
-cuvintele. Dupa ce iesim din loop_digits, intram in verif_length, unde comparam
-lungimea celui mai lung palindrom gasit cu lungimea cuvintelor din masca actuala
-=> daca este mai mic lungime_string, nu are rost sa continuam, intram in
-eticheta next_masca. In caz contrar, adaugam in registrul eax
-lungime_string + 1, dam push la celelalte registre pentru a nu le corupe
-valoarea pe parcursul executiei functiei externe, dam push si la eax apoi apelam
-functia malloc al carei rezultat se salveaza tot in eax. Curatam stiva si dam
-pop la registre, apoi ii atribuim lui temp memoria alocata cu malloc salvata in
-eax. Initializam temp[0] = '\0', apoi similar ca la loop_digits, facem o copie
-mastii curente in copie, initializam edi cu 0 si intram in loop_concatenare,
-unde similar ca la loop_digits verificam daca cuvantul de pe pozitia i se afla
-sau nu in masca prin realizarea operatiei and intre masca si 1. Daca cuvantul se
-afla in masca, punem in edx cuvantul curent si in eax temp si apelam functia
-strcat care ne adauga cuvantul in temp. Curatam stiva, dam pop la registre, apoi
-intram in eticheta next_word, in care am fi intrat direct daca cuvantul nu se
-afla in masca curenta. Impartim variabila copie la 2 prin shiftare la dreapta pe
-biti, punem noua variabila a copiei in copie, apoi incrementam edi pentru a
-prelucra urmatorul cuvant. Daca am depasit numarul de cuvante, trebuie sa
-adaugam terminatorul de sir concatenarii curente, lucru pe care il facem in
-eticheta adauga_terminator_sir, astfel temp[lungime_string] = '\0'. Dam push la
-ecx pentru a nu ii corupe valoarea pe parcursul executiei functiei externe, apoi
-dam push la cuvantul salvat in temp si la lungimea sa salvata in variabila
-lungime_string, si apelam functia realizata anterior, check_palindrome, pentru a
-vedea daca concatenarea rezultata este palindrom sau nu. Daca nu este, nu are
-rost sa mai continuam, astfel curatam temp in eticheta clean_temp, in caz
-contrar verificam daca palindromul nostru este unul mai bun decat cel gasit pana
-acum sau nu. Astfel verificam daca lungime_string > rezultat_length, daca da
-intram in eticheta alocare_sir, in caz contrar verificam daca au aceeasi
-lungime, daca au verificam daca rezultat == NULL,daca este intram in
-alocare_sir, daca nu verificam cu strcmp daca noul cuvant gasit este mai mic din
-punct de vedere lexicografic. Daca este mai mic, intram in alocare_sir, in caz
-contrar conditiile nu se respecta drept urmare palindromul gasit nu este o
-optiune mai buna asa ca trecem la urmatoarea masca dar inainte curatam ce se
-afla in temp cu free prin label-ul clean_temp. Daca am gasit un string valid,
-noul rezultat va deveni acel palindrom. Astfel in alocare_sir, verificam daca
-rezultat continea deja un string, daca da ii dam free deoarece vrem sa punem un
-string mai bun, daca nu trecem direct la faza de alocare. Punem in eax
-lungime_string la care adaugam 1 pentru terminatorul de sir, dam push la
-registre pentru a nu le corupe valoarea pe parcursul executiei functiei externe,
-si alocam cu malloc rezultat cu (lungime_string + 1). Apoi cu ajutorul functiei
-externe strcpy, punem in rezultat palindromul salvat in temp. La final eliberam
-temp prin eticheta clean_temp care la final la randul ei ne va trimite in
-next_masca unde incrementam ecx-ul si continuam procesul explicat pentru
-urmatoarea masca. Odata procesate toate mastile, ajungem in label-ul
-palindrom_rezultat, unde vrem sa eliberam continutul vectroului ce retine
-lungimile. Inainte vom da push la registre pentru a nu le corupe valoarea pe
-parcursul executiei functiei externe, iar dupa apelul functiei le vom da pop. Nu
-in cele din urma, punem in eax palindromul rezultat si iesim din functie.
+Two functions were required here, `get_words` and `sort`. I started with
+`get_words`, and for `sort` I additionally implemented the comparator
+`comparare_cuvinte`. A single variable, `i`, is declared in `.bss` and is used by
+`get_words` to measure the length of the current word.
 
+### `• get_words(char *s, char **words, int number_of_words)`
+
+Splits the text into words and stores pointers to them in the `words` array.
+The recognised delimiters are `.`, `,`, newline and space.
+
+**Register layout**
+
+- `ebx` = the input string
+- `ecx` = the array of strings where the words are saved
+- `edx` = the number of words
+- `eax` = index of the character currently being inspected (reset for each word)
+- `edi` = pointer to the beginning of the current word; unlike `eax`, it keeps
+  advancing through the whole string
+- `esi` = counter for the number of words found so far
+- `[i]` = length of the current word
+
+**How it works**
+
+`loop_cuvinte` compares the current byte against each delimiter. If none matches,
+`new_char` first checks for the string terminator and otherwise increments both
+`eax` and `[i]`, growing the length of the current word.
+
+When a delimiter is found, `cuvant_nou` writes a string terminator in its place
+and advances `eax` by one. The address stored in `edi`, the beginning of the
+current word, is saved into `words[esi]`, after which `edi` is moved past the
+word and its terminator so that it stays aligned with `eax`.
+
+`verificare_delimitatori` then skips over any remaining delimiters before the
+next word: as long as delimiters keep appearing, `repeat` advances both `eax` and
+`edi`. Once a real character is reached, `[i]` is reset to `0` for the new word,
+`esi` is incremented and the flow returns to `loop_cuvinte`.
+
+If the end of the string is reached, `ultimul_cuvant` checks whether `[i]` is
+non-zero; if it is, one last word still needs to be recorded in the array.
+Finally, `end_loop` loads `words[0]` into `eax` and returns.
+
+### `• sort(char **words, int number_of_words, int size)`
+
+Sorts the words **by length first, and lexicographically for equal lengths**.
+
+The vector of words goes into `ebx`, the number of words into `ecx` and the size
+of a word into `edx`. The four parameters required by `qsort` — the array, the
+number of elements, the element size and the comparator `comparare_cuvinte` — are
+pushed in reverse order, `qsort` is called, and the stack is cleaned up
+afterwards. At the end, `eax` receives a pointer to the beginning of the sorted
+array.
+
+### `• comparare_cuvinte` - the comparator
+
+The comparator retrieves both string pointers from the stack and dereferences
+them to obtain the actual addresses of the two words.
+
+1. **Length computation** = `edi` and `esi` are zeroed and used to count the
+   characters of the first and the second word respectively. `strlen_1` and
+   `strlen_2` do the same thing: they advance until the string terminator is
+   found. Between them, `reatribuire_eax` resets `eax` to `0` so the second
+   measurement can start from the first character.
+2. **`comparare_rezultate`** = if the first word is longer the function returns
+   `1`; if the second is longer it returns `-1`.
+3. **lexicographic comparison** = for equal lengths, `edi` is reset to `0` and
+   `strcmp_loop` walks both words letter by letter. At the first difference the
+   flow jumps to `return_greater` (`eax = 1`) or `return_lower` (`eax = -1`).
+   If the end of the words is reached without any difference, `egalitate` sets
+   `eax = 0`.
+
+## Task 3 - Recursive k-Fibonacci
+
+```c
+int kfib(int n, int k);
+```
+
+The recurrence follows three rules:
+
+- `n < k` → return `0`
+- `n == k` → return `1`
+- `n > k` → return the sum of the previous `k` terms, computed recursively
+
+**How it works**
+
+`ebx` holds `n` and `edx` holds `k`. The two are compared right away: equality
+jumps to `return_k1` (`eax = 1`), a smaller `n` jumps to `return_k0` (`eax = 0`),
+and both exit the function through the common `end` label.
+
+Otherwise the recursive sum is computed in `edi` (initialised with `0`), with
+`ecx` acting as the loop counter running from `1` to `k`. At every iteration
+`esi` receives `n - i`; `ecx` and `edx` are pushed to protect them across the
+recursive call, the parameters `k` and `n - i` are pushed in reverse order, and
+`kfib` calls itself. After the call the stack is cleaned, the registers are
+popped back, the returned value is added to the running sum in `edi`, and the
+loop moves on.
+
+Once the loop finishes, `end_loop` copies the accumulated sum from `edi` into
+`eax` and the function returns.
+
+## Task 4 - The longest composite palindrome
+
+Two functions were needed here: `check_palindrome` and `composite_palindrome`.
+The second one relies on six external functions — `malloc`, `free`, `strlen`,
+`strcpy`, `strcat` and `strcmp` — and on seven variables declared in `.bss`.
+
+### `• check_palindrome(char *s, int len)`
+
+`eax` receives the string and `ebx` its length. `eax` is pushed on the stack
+because it is temporarily reused to compute half of the length; afterwards it is
+popped back to its original value. `edi` is initialised with `0` and `esi` with
+`len - 1`, since character indexing starts at `0` and the last character sits at
+position `n - 1`.
+
+The loop then compares the character at `edi` with its mirror at `esi`
+(recomputed at each iteration by subtracting `edi` from the length). At the first
+mismatch, `nu_e_palindrom` sets `eax = 0` and the function exits through
+`end_loop`. If matching characters are found, `repeat` advances `edi` to the next
+pair. If the loop finishes without a mismatch, `e_palindrom` sets `eax = 1`.
+
+### `• composite_palindrome(char **strs, int len)`
+
+The task is solved with the **bitmask** technique: every subset of the input
+words is represented by a number, and bit `i` of that number tells whether word
+`i` belongs to the subset.
+
+**Variables in `.bss`**
+
+| Variable | Role |
+| --- | --- |
+| `rezultat` | the best palindrome found so far |
+| `rezultat_length` | the length of that palindrome |
+| `lungimi` | array holding the length of every input word |
+| `p` | the number of possible subsets, i.e. `2^len` (`2^15` in our case) |
+| `copie` | a working copy of the current mask |
+| `lungime_string` | total length of the words selected by the current mask |
+| `temp` | the concatenation produced by the current mask |
+
+**Step 1: precomputing the word lengths.**
+`ebx` receives the array of words and `edx` the number of words; `rezultat` and
+`lungimi` both start as `NULL`. The number of words is multiplied by `4` to
+obtain `len * sizeof(int)`, and `malloc` allocates the `lungimi` array. Then
+`loop_retinere_lungimi_cuvinte` walks through every word, calls `strlen` on
+`strs[i]` and stores the result at position `ecx` of the array through the
+`retinere_lungime` label. `rezultat_length` is initialised with `0`.
+
+**Step 2: iterating over all masks.**
+`shiftare` computes `1 << len` and stores it in `p`, after which `ecx` runs from
+`1` to `p`, each value representing one possible subset of words.
+
+For every mask, `copie` receives a copy of it, `lungime_string` is reset to `0`,
+and `loop_digits` inspects the words one by one: the parity of `copie` tells
+whether the current word belongs to the subset. If it does, `suma_lungimi` adds
+its length from the `lungimi` array; either way, `next_word_loop` shifts `copie`
+one bit to the right (a division by two) and advances `edi` to the next word.
+
+**Step 3: filtering and building the candidate.**
+`verif_length` compares the total length of the current subset against the best
+palindrome found so far. If the subset cannot possibly beat it, the code jumps
+straight to `next_masca`. Otherwise `malloc` allocates `lungime_string + 1` bytes
+into `temp`, `temp[0]` is set to `'\0'`, and `loop_concatenare` walks the mask
+again, calling `strcat` for every word that belongs to the subset.
+`adauga_terminator_sir` then writes the string terminator at the end of the
+concatenation.
+
+**Step 4: validating and keeping the best result.**
+`check_palindrome` is called on `temp`. If the concatenation is not a palindrome,
+`clean_temp` frees the buffer and the loop moves on. If it is, the candidate
+replaces the current result when:
+
+- it is strictly longer than `rezultat_length`, **or**
+- it has the same length and either `rezultat` is still `NULL`, or `strcmp` shows
+  the new string is smaller lexicographically.
+
+In those cases `alocare_sir` frees the previous result (if any), allocates
+`lungime_string + 1` bytes and copies `temp` into `rezultat` with `strcpy`.
+Either way, `temp` is released through `clean_temp` before `next_masca`
+increments `ecx` and the process repeats for the following mask.
+
+**Step 5: cleanup.**
+Once every mask has been processed, `palindrom_rezultat` frees the `lungimi`
+array, loads the resulting palindrome into `eax` and the function returns.
